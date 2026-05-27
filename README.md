@@ -75,10 +75,10 @@ Delete and Execute events carry only an `order_id`, not a price. Without a side-
 ## 6-Phase Build Plan
 
 ### Phase 1 — Foundation: Structs + Data Generator
-- [ ] Define `OrderEvent` struct with `#pragma pack(1)`, paise pricing, all fields
-- [ ] Define `TopOfBook` struct
-- [ ] Write synthetic NSE-calibrated data generator (Poisson arrivals, ₹0.05 ticks)
-- [ ] Write NSE CSV reader producing `OrderEvent` (same interface as synthetic generator)
+- [ DONE ] Define `OrderEvent` struct with `#pragma pack(1)`, paise pricing, all fields
+- [ DONE ] Define `TopOfBook` struct
+- [ DONE ] Write synthetic NSE-calibrated data generator (Poisson arrivals, ₹0.05 ticks)
+- [ DONE ] Write NSE CSV reader producing `OrderEvent` (same interface as synthetic generator)
 
 **Exit condition:** 1000 events generated and printed. Every price is a clean multiple of 5 paise. Zero floats.
 
