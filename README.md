@@ -85,11 +85,11 @@ Delete and Execute events carry only an `order_id`, not a price. Without a side-
 ***
 
 ### Phase 2 — Order Book Core: `std::map` Version
-- [ ] Implement `OrderBook` with `std::map` bids (descending) + asks (ascending)
-- [ ] Implement `order_map: unordered_map<order_id → {side, price, qty}>`
-- [ ] Implement `add()`, `remove()`, `execute()`, `cancel()`, `snapshot()`
-- [ ] Unit tests: 100 adds → 50 deletes → 20 executes → verify all sides correct
-- [ ] Edge case tests: partial execute, level disappears when qty hits 0, crossed book prevention
+- [ DONE ] Implement `OrderBook` with `std::map` bids (descending) + asks (ascending)
+- [ DONE ] Implement `order_map: unordered_map<order_id → {side, price, qty}>`
+- [ DONE ] Implement `add()`, `remove()`, `execute()`, `cancel()`, `snapshot()`
+- [ DONE ] Unit tests: 100 adds → 50 deletes → 20 executes → verify all sides correct
+- [ DONE ] Edge case tests: partial execute, level disappears when qty hits 0, crossed book prevention
 
 **Exit condition:** All correctness tests pass. Book state manually verifiable after mixed event sequences.
 
