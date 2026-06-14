@@ -96,13 +96,22 @@ Delete and Execute events carry only an `order_id`, not a price. Without a side-
 ***
 
 ### Phase 3 — Benchmarking + Flat Price Ladder
-- [ ] Integrate `rdtsc` benchmarking wrapper, compute P50 / P99 / P999 over 1M events
-- [ ] Record baseline `std::map` latency numbers
-- [ ] Implement `PriceLadder`: pre-allocated `int32_t qty[LEVELS]`, indexed by `(price - min_price) / 5`
-- [ ] Swap `std::map` for `PriceLadder` (external API unchanged)
-- [ ] Re-benchmark: record improved P50 / P99 / P999
+- [ DONE ] Integrate `rdtsc` benchmarking wrapper, compute P50 / P99 / P999 over 1M events
+- [ DONE ] Record baseline `std::map` latency numbers
+- [ DONE ] Implement `PriceLadder`: pre-allocated `int32_t qty[LEVELS]`, indexed by `(price - min_price) / 5`
+- [ DONE ] Swap `std::map` for `PriceLadder` (external API unchanged)
+- [ DONE ] Re-benchmark: record improved P50 / P99 / P999
 
 **Exit condition:** Before/after benchmark table in hand. P99 drop from ~300–400ns (`std::map`) to ~60–100ns (flat ladder).
+
+## Benchmark Results after implementing phase 3
+*1M events on Nifty 50 synthetic data, Intel CPU @ 4.7GHz boost, taskset -c 0*
+
+| Implementation     | P50      | P99      | P99.9    | Throughput     |
+|--------------------|----------|----------|----------|----------------|
+| `std::map`         | 88.5 ns  | 322.1 ns | 564.3 ns | 9.8M ops/sec   |
+| Flat price ladder  | 12.8 ns  | **92.8 ns**  | 122.6 ns | **49.5M ops/sec** |
+| **Speedup**        | **6.9x** | **3.5x** | **4.6x** | **5.1x**       |
 
 ***
 

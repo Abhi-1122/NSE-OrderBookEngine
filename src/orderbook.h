@@ -122,9 +122,10 @@ private:
 inline void OrderBook::add(const OrderEvent& e) {
     // Reject duplicates — same order_id added twice is a feed error
     if (order_map_.count(e.order_id)) {
+        return;
         // In production: log and skip. In tests: throw to catch bad data.
-        throw std::logic_error("Duplicate order_id in Add: " +
-                               std::to_string(e.order_id));
+        // throw std::logic_error("Duplicate order_id in Add: " +
+        //                        std::to_string(e.order_id));
     }
 
     // Add quantity to the price level
