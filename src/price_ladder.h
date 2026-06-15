@@ -36,10 +36,12 @@
 class PriceLadderBook
 {
 public:
+    uint64_t out_of_range_events_ = 0;
+    uint64_t out_of_range_events() const { return out_of_range_events_; }
     struct Config
     {
-        int64_t ref_price_paise = 22500'00;
-        double band_pct = 0.05;
+        int64_t ref_price_paise = 1400'00;
+        double band_pct = 0.14;
         int64_t tick_size = 5;
 
         Config() = default;
@@ -86,10 +88,16 @@ public:
 
     void add(const OrderEvent &e)
     {
-        if (order_map_.count(e.order_id)) return;
-            // throw std::logic_error("Duplicate order_id: " + std::to_string(e.order_id));
+        if (order_map_.count(e.order_id))
+            return;
 
         int idx = price_to_idx(e.price);
+        if (idx < 0 || idx >= (int)levels_)
+        {
+            ++out_of_range_events_;
+            return;
+        }
+
         if (e.side == 'B')
         {
             bids_[idx] += e.quantity;
@@ -163,17 +171,24 @@ public:
     TopOfBook snapshot() const
     {
         TopOfBook tob{};
-        // best_bid_idx_ is the highest non-zero bid index
-        // best_ask_idx_ is the lowest  non-zero ask index
-        if (best_bid_idx_ >= 0)
+
+        int bid_idx = best_bid_idx_;
+        while (bid_idx >= 0 && bids_[bid_idx] <= 0)
+            --bid_idx;
+
+        int ask_idx = best_ask_idx_;
+        while (ask_idx < (int)levels_ && asks_[ask_idx] <= 0)
+            ++ask_idx;
+
+        if (bid_idx >= 0)
         {
-            tob.best_bid_price = idx_to_price(best_bid_idx_);
-            tob.best_bid_qty = bids_[best_bid_idx_];
+            tob.best_bid_price = idx_to_price(bid_idx);
+            tob.best_bid_qty = bids_[bid_idx];
         }
-        if (best_ask_idx_ < (int)levels_)
+        if (ask_idx < (int)levels_)
         {
-            tob.best_ask_price = idx_to_price(best_ask_idx_);
-            tob.best_ask_qty = asks_[best_ask_idx_];
+            tob.best_ask_price = idx_to_price(ask_idx);
+            tob.best_ask_qty = asks_[ask_idx];
         }
         return tob;
     }
@@ -242,6 +257,8 @@ private:
     // price → array index: O(1), two integer ops
     inline int price_to_idx(int64_t price) const
     {
+        if (price < min_price_ || price > max_price_)
+            return -1;
         return (int)((price - min_price_) / cfg_.tick_size);
     }
 
@@ -264,17 +281,20 @@ private:
     void reduce(char side, int64_t price, int32_t qty)
     {
         int idx = price_to_idx(price);
+        if (idx < 0 || idx >= (int)levels_)
+        {
+            ++out_of_range_events_;
+            return;
+        }
+
         if (side == 'B')
         {
             bids_[idx] -= qty;
             if (bids_[idx] <= 0)
             {
                 bids_[idx] = 0;
-                // if we just emptied the best bid, scan downward for new best
                 if (idx == best_bid_idx_)
-                {
                     best_bid_idx_ = find_best_bid(idx - 1);
-                }
             }
         }
         else
@@ -283,11 +303,8 @@ private:
             if (asks_[idx] <= 0)
             {
                 asks_[idx] = 0;
-                // if we just emptied the best ask, scan upward for new best
                 if (idx == best_ask_idx_)
-                {
                     best_ask_idx_ = find_best_ask(idx + 1);
-                }
             }
         }
     }
